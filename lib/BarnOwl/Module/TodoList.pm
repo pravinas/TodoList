@@ -28,7 +28,7 @@ sub format_line {
     my $due  = shift;
     my $done = shift;
     my $is_done = is_yes($done);
-    my $line = "";
+    my $line = "  ";
     $line .= colorize("$task [$due] ", $is_done);
     $line .= ($is_done) ? "DONE!" : "";
     $line .= "\n";
