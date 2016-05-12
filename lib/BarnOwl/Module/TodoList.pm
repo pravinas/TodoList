@@ -30,7 +30,7 @@ sub format_line {
     my $is_done = is_yes($done);
     my $line = "";
     $line .= colorize("$task [$due] ", $is_done);
-    $line .= "DONE!" if $is_done else "";
+    $line .= ($is_done) ? "DONE!" : "";
     $line .= "\n";
     return $line;
 }
@@ -39,7 +39,7 @@ sub colorize {
     my $text = shift;
     my $is_done = shift;
     
-    if ($is_done) {return $text}
+    unless ($is_done) {return $text}
     else {return '@<@color(blue)'."$text>";}
 }
 
@@ -66,7 +66,7 @@ sub got_done {
 
 sub got_finished{
     my ($args, $prevmsg, $task, $due, $done, $finished) = @_;
-    my $message = join($prevmsg, format_line($task, $due, $done));
+    my $message .= format_line($task, $due, $done);
 
     if(is_yes($finished)){
         # Terminate and write output
