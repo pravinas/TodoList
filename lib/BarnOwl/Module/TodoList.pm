@@ -66,7 +66,7 @@ sub got_done {
 
 sub got_finished{
     my ($args, $prevmsg, $task, $due, $done, $finished) = @_;
-    my $message .= format_line($task, $due, $done);
+    my $message = $prevmsg . format_line($task, $due, $done);
 
     if(is_yes($finished)){
         # Terminate and write output
