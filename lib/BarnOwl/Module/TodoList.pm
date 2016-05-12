@@ -26,46 +26,6 @@ sub trim {
     return $s;
 }
 
-sub got_data {
-    my ($args, $data) = @_;
-    my $message = "[Zephyr TODO Dashboard]\n";
-
-    my @bars = split(/;/,$data);
-    for(@bars) {
-        next unless /=/;
-        my ($tag,$val)  = split('=',$_,2);
-        $tag = trim($tag);
-        $val = trim($val);
-        $message .= format_bar(sprintf('%15s',$tag), $val);
-    }
-    BarnOwl::zephyr_zwrite($args, $message);
-}
-
-sub got_sleep {
-    my @pass = @_;
-    BarnOwl::start_question('Angst [0-10]? ', sub {got_angst(@pass, @_)});
-}
-
-sub got_angst {
-    my @pass = @_;
-    BarnOwl::start_question('Stress [0-10]? ', sub {got_stress(@pass, @_)});
-}
-
-sub got_stress {
-    my @pass = @_;
-    BarnOwl::start_question('Hosage [0-10]? ', sub {got_hosage(@pass, @_)});
-}
-
-sub got_hosage {
-    my ($args, $sleep, $angst, $stress, $hosage) = @_;
-    my $message = "[Zephyr status dashboard]\n";
-    $message .= format_bar("sleepdep ", $sleep);
-    $message .= format_bar("angst    ", $angst);
-    $message .= format_bar("stress   ", $stress);
-    $message .= format_bar("hosage   ", $hosage);
-    BarnOwl::zephyr_zwrite($args, $message);
-}
-
 sub format_bar {
     my $header = shift;
     my $num    = shift;
@@ -88,15 +48,30 @@ sub colorize {
     return '@<@color(' . $color . ")$text>";
 }
 
-sub got_task {
-    my ($args,$prevmsg,$data) = @_;
-    
-}
-
 sub cmd_todolist{
     my $cmd = shift;
     my $args = join(" ", @_);
-    BarnOwl::start_question("Task: ", sub {got_task($args,"", @_)});
+    BarnOwl::start_question("Task: ", sub {got_task($args,"[Zephyr TODO Dashboard]\n", @_)});
+}
+
+sub got_task {
+    #my ($args,$prevmsg,$task) = @_;
+    my @pass = @_;
+    BarnOwl::start_question("Due: ", sub {got_due(@pass, @_)});
+}
+
+sub got_due {
+    my @pass = @_;
+    BarnOwl::start_question("Done? (y/n): ", sub{got_done(@pass, @_)});
+}
+
+sub got_done {
+    my @pass = @_;
+    BarnOwl::start_question("Was that the last item on your TODO List? (y/n): ", sub{got_finished(@pass, @_)});
+}
+
+sub got_finished{
+    # TODO
 }
 
 BarnOwl::new_command(todolist => \&cmd_todolist, {
