@@ -18,34 +18,29 @@ package BarnOwl::Module::TodoList;
 
 our $VERSION = 0.1;
 
-
-sub trim {
-    my $s = shift;
-    $s =~ s/^\s+//;
-    $s =~ s/\s+$//;
-    return $s;
+sub is_yes {
+    my $stringy = shift;
+    return (index($stringy, "y") > -1 or index($stringy, "Y") > -1);
 }
 
-sub format_bar {
-    my $header = shift;
-    my $num    = shift;
-    my $bar = "";
-    $bar .= "$header [";
-    $bar .= colorize(("="x$num) . (" " x (10 - $num)), $num) . "]";
-    $bar .= colorize(" ($num/10)", $num);
-    $bar .= "\n";
-    return $bar;
+sub format_line {
+    my $task = shift;
+    my $due  = shift;
+    my $done = shift;
+    my $is_done = is_yes($done);
+    my $line = "";
+    $line .= colorize("$task [$due] ", $is_done);
+    $line .= "DONE!" if $is_done else "";
+    $line .= "\n";
+    return $line;
 }
 
 sub colorize {
     my $text = shift;
-    my $num = shift;
-    my $color;
-    if($num <= 3) { $color = "green" }
-    elsif($num <= 6) {$color = "yellow"}
-    else {$color = "red";}
-
-    return '@<@color(' . $color . ")$text>";
+    my $is_done = shift;
+    
+    if ($is_done) {return $text}
+    else {return '@<@color(blue)'."$text>";}
 }
 
 sub cmd_todolist{
@@ -55,7 +50,6 @@ sub cmd_todolist{
 }
 
 sub got_task {
-    #my ($args,$prevmsg,$task) = @_;
     my @pass = @_;
     BarnOwl::start_question("Due: ", sub {got_due(@pass, @_)});
 }
@@ -71,7 +65,16 @@ sub got_done {
 }
 
 sub got_finished{
-    # TODO
+    my ($args, $prevmsg, $task, $due, $done, $finished) = @_;
+    my $message = join($prevmsg, format_line($task, $due, $done));
+
+    if(is_yes($finished)){
+        # Terminate and write output
+        BarnOwl::zephyr_zwrite($args, $message);
+    }else{
+        # Keep asking about things
+        BarnOwl::start_question("Task: ", sub{got_task($args, $message, @_)});
+    }
 }
 
 BarnOwl::new_command(todolist => \&cmd_todolist, {
